@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Registro Facial</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+<!-- Contenedor de toasts — JS lo llena dinámicamente -->
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<header class="cabecera">
+  <a href="/" class="cabecera__logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+    FacialApp
+  </a>
+  <nav class="cabecera__nav">
+    <a href="/"           class="nav-link nav-link--activo" aria-current="page">📋 Registro</a>
+    <a href="/asistencia" class="nav-link">✅ Asistencia</a>
+  </nav>
+</header>
+
+<div class="contenido">
+  <div class="wizard" id="wizard">
+
+    <!-- ── Barra de pasos ── -->
+    <div class="wizard__pasos" role="list" aria-label="Pasos">
+      <div class="wizard__paso activo"    id="step-0" role="listitem">
+        <span class="wizard__num">1</span><span>Colaborador</span>
+      </div>
+      <div class="wizard__paso"           id="step-1" role="listitem">
+        <span class="wizard__num">2</span><span>Fotos</span>
+      </div>
+      <div class="wizard__paso"           id="step-2" role="listitem">
+        <span class="wizard__num">3</span><span>Guardar</span>
+      </div>
+    </div>
+
+    <!-- ── Pista ── -->
+    <div class="wizard__pista">
+      <div class="wizard__diapositivas" id="diapositivas">
+
+        <!-- ════════════════════════
+             SLIDE 0 — Colaborador
+        ════════════════════════ -->
+        <section class="wizard__slide" aria-label="Paso 1: colaborador">
+
+          <div>
+            <label class="lbl" for="buscador">🔍 Buscar por nombre o código</label>
+            <input type="search" id="buscador" class="input"
+                   placeholder="Ej: Pérez o EMP001" autocomplete="off">
+          </div>
+
+          <div>
+            <label class="lbl" for="sel-colab">Colaborador</label>
+            <select id="sel-colab" class="select">
+              <option value="">— Cargando... —</option>
+            </select>
+          </div>
+
+          <div id="colab-card" class="colab-card" hidden>
+            <div class="colab-card__av" id="colab-av"></div>
+            <div>
+              <p class="colab-card__name" id="colab-nombre"></p>
+              <p class="colab-card__dato" id="colab-codigo"></p>
+              <p class="colab-card__dato" id="colab-area"></p>
+            </div>
+          </div>
+
+          <div id="aviso-reemplazo" class="alerta alerta--warn" role="alert" hidden>
+            <strong>⚠️ Este colaborador ya tiene registro facial activo.</strong><br>
+            Si continúas, las fotos anteriores quedarán como <em>REEMPLAZADAS</em>
+            (no se borran, quedan en historial).
+            <div class="alerta__btns">
+              <button type="button" id="btn-si-reempl" class="btn btn--warn">
+                Sí, reemplazar
+              </button>
+              <button type="button" id="btn-no-reempl" class="btn btn--gris">
+                Cancelar
+              </button>
+            </div>
+          </div>
+
+          <div class="wiz-nav wiz-nav--right" style="margin-top:auto">
+            <button type="button" id="btn-paso1" class="btn btn--primario" disabled>
+              Siguiente: tomar fotos →
+            </button>
+          </div>
+
+        </section>
+
+        <!-- ════════════════════════
+             SLIDE 1 — Fotos
+             Layout: 2 columnas
+             Izq: cámara grande (ocupa todo el alto)
+             Der: instrucciones + miniaturas + nav
+        ════════════════════════ -->
+        <section class="wizard__slide slide-fotos" aria-label="Paso 2: fotos">
+
+          <!-- COLUMNA IZQUIERDA — cámara -->
+          <div class="fotos-col-cam">
+
+            <!-- Selector de cámara compacto sobre el video -->
+            <div class="cam-topbar">
+              <select id="sel-cam" class="select select--sm">
+                <option value="user">📷 Frontal</option>
+                <option value="environment">📸 Trasera</option>
+              </select>
+              <button type="button" id="btn-cam" class="btn btn--gris btn--sm">
+                Activar cámara
+              </button>
+            </div>
+
+            <!-- Video — ocupa todo el espacio restante de la columna -->
+            <div class="cam-wrap cam-wrap--fill" id="cam-wrap">
+              <video id="video" class="cam-video" autoplay playsinline muted
+                     aria-label="Cámara en vivo"></video>
+
+              <!-- Marco oval guía -->
+              <div class="cam-overlay" aria-hidden="true">
+                <div class="cam-overlay__marco" id="cam-marco"></div>
+              </div>
+
+              <!-- Cuenta regresiva superpuesta al video (aparece cuando detecta rostro) -->
+              <div class="cam-countdown" id="cam-countdown" hidden>
+                <span id="countdown-num">3</span>
+              </div>
+
+              <!-- Estado de detección superpuesto (esquina inferior) -->
+              <div class="cam-estado" id="cam-estado" hidden>
+                <span id="cam-estado-txt"></span>
+              </div>
+
+              <!-- Placeholder cuando no hay stream -->
+              <div class="cam-placeholder" id="cam-ph">
+                <span class="cam-placeholder__ico">📷</span>
+                <span>Pulsa "Activar cámara"</span>
+              </div>
+            </div>
+
+          </div><!-- /col cam -->
+          
+
+
+          <!-- COLUMNA DERECHA — controles -->
+          <div class="fotos-col-ctrl">
+
+            <!-- Pills de progreso -->
+            <div class="fotos-pills" role="list" aria-label="Estado capturas">
+              <div class="foto-pill" id="pill-FRONTAL" role="listitem">
+                <span class="foto-pill__ico">😐</span><span>Frontal</span>
+              </div>
+              <div class="foto-pill" id="pill-LATERAL_IZQUIERDA" role="listitem">
+                <span class="foto-pill__ico">👈</span><span>Izquierda</span>
+              </div>
+              <div class="foto-pill" id="pill-LATERAL_DERECHA" role="listitem">
+                <span class="foto-pill__ico">👉</span><span>Derecha</span>
+              </div>
+            </div>
+
+            <!-- Instrucción de postura -->
+            <div class="instruccion" id="instruccion">
+              <span class="instruccion__ico" id="instr-ico">😐</span>
+              <span id="instr-txt">Activa la cámara — la foto se tomará automáticamente</span>
+            </div>
+
+            <!-- Miniaturas de las 3 tomas -->
+            <div class="miniaturas">
+              <figure class="miniatura" id="mini-FRONTAL">
+                <div class="mini-vacio"><span class="mini-vacio__ico">😐</span><span>Frontal</span></div>
+                <figcaption class="mini-cap">
+                  Frontal
+                  <button type="button" class="btn-retomar" data-tipo="FRONTAL" hidden>Retomar</button>
+                </figcaption>
+              </figure>
+              <figure class="miniatura" id="mini-LATERAL_IZQUIERDA">
+                <div class="mini-vacio"><span class="mini-vacio__ico">👈</span><span>Izquierda</span></div>
+                <figcaption class="mini-cap">
+                  Lat. izq.
+                  <button type="button" class="btn-retomar" data-tipo="LATERAL_IZQUIERDA" hidden>Retomar</button>
+                </figcaption>
+              </figure>
+              <figure class="miniatura" id="mini-LATERAL_DERECHA">
+                <div class="mini-vacio"><span class="mini-vacio__ico">👉</span><span>Derecha</span></div>
+                <figcaption class="mini-cap">
+                  Lat. der.
+                  <button type="button" class="btn-retomar" data-tipo="LATERAL_DERECHA" hidden>Retomar</button>
+                </figcaption>
+              </figure>
+            </div>
+
+            <div class="wiz-nav">
+              <button type="button" id="btn-v0" class="btn btn--ghost">← Volver</button>
+              <button type="button" id="btn-paso2" class="btn btn--primario" disabled>
+                Siguiente →
+              </button>
+            </div>
+
+          </div><!-- /col ctrl -->
+
+          <!-- Canvas oculto para captura -->
+          <canvas id="canvas" hidden></canvas>
+<!-- En index.html, debajo del bloque de cámara -->
+<button type="button" id="btn-captura-manual" class="btn btn--secundario" style="margin-top:12px; width:100%; padding:14px; font-size:1rem;">
+  📷 Capturar manualmente
+</button>
+        </section>
+
+        <!-- ════════════════════════
+             SLIDE 2 — Guardar
+        ════════════════════════ -->
+        <section class="wizard__slide" aria-label="Paso 3: guardar">
+
+          <div class="resumen-fotos" id="resumen-fotos">
+            <div class="resumen-foto" id="res-FRONTAL">
+              <div class="mini-vacio"><span class="mini-vacio__ico">😐</span></div>
+              <span>Frontal</span>
+            </div>
+            <div class="resumen-foto" id="res-LATERAL_IZQUIERDA">
+              <div class="mini-vacio"><span class="mini-vacio__ico">👈</span></div>
+              <span>Izquierda</span>
+            </div>
+            <div class="resumen-foto" id="res-LATERAL_DERECHA">
+              <div class="mini-vacio"><span class="mini-vacio__ico">👉</span></div>
+              <span>Derecha</span>
+            </div>
+          </div>
+
+          <div class="guardar-cta" id="guardar-cta">
+            <span class="guardar-cta__ico">💾</span>
+            <p class="guardar-cta__titulo" id="g-titulo">Listo para guardar</p>
+            <p class="guardar-cta__desc" id="g-desc">
+              Las 3 fotos fueron validadas. Pulsa el botón para guardar el perfil facial.
+            </p>
+            <button type="button" id="btn-guardar"
+                    class="btn btn--ok btn--ancho btn--captura btn--captura-xl">
+              💾 Guardar registro facial
+            </button>
+          </div>
+
+          <div class="spinner-wrap" id="spinner-g" hidden>
+            <div class="spinner"></div>
+            <p>Procesando y guardando…</p>
+          </div>
+
+          <div id="msg-g" class="alerta" role="alert" hidden></div>
+
+          <div class="wiz-nav">
+            <button type="button" id="btn-v1" class="btn btn--ghost">← Volver a fotos</button>
+            <button type="button" id="btn-nuevo" class="btn btn--primario" hidden>
+              + Registrar otro
+            </button>
+          </div>
+
+        </section>
+
+      </div><!-- /diapositivas -->
+    </div><!-- /pista -->
+
+  </div><!-- /wizard -->
+</div><!-- /contenido -->
+
+<script src="{{ url_for('static', filename='js/registro.js') }}"></script>
+</body>
+</html>

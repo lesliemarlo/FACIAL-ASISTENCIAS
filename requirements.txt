@@ -1,0 +1,52 @@
+# ══════════════════════════════════════════════════════════
+# requirements.txt
+# Módulo de reconocimiento facial para asistencia de colaboradores
+#
+# REQUISITO CRÍTICO: Python 3.11 (NO 3.13 — dlib no tiene builds
+# estables para 3.13 al momento de esta entrega).
+#
+# Instalación (ver también sección 10 de la documentación):
+#   1. py -3.11 -m venv venv
+#   2. .\venv\Scripts\Activate.ps1
+#   3. pip install -r requirements.txt
+#   4. Instalar dlib manualmente (ver nota abajo) y luego face_recognition
+# ══════════════════════════════════════════════════════════
+
+# ── Servidor web ──────────────────────────────────────────
+Flask==3.0.3
+
+# ── Base de datos ─────────────────────────────────────────
+mysql-connector-python==9.1.0
+
+# ── Variables de entorno (.env) ───────────────────────────
+python-dotenv==1.0.1
+
+# ── Procesamiento de imágenes ─────────────────────────────
+Pillow==10.4.0
+
+# ── Cálculo numérico ───────────────────────────────────────
+# IMPORTANTE: debe ser NumPy 1.x, NO 2.x.
+# El wheel precompilado de dlib usado en este proyecto fue
+# compilado contra NumPy 1.x — con NumPy 2.x, dlib lanza
+# "Unsupported image type, must be 8bit gray or RGB image"
+# aunque el array tenga el formato correcto.
+numpy<2
+
+# ── OpenCV ──────────────────────────────────────────────────
+# Version fijada a la serie 4.10 — versiones 5.x cambiaron la
+# API interna y CascadeClassifier deja de estar disponible
+# donde este proyecto lo espera.
+opencv-python==4.10.0.84
+
+# ══════════════════════════════════════════════════════════
+# dlib + face_recognition — INSTALACIÓN MANUAL, NO por este archivo
+# ══════════════════════════════════════════════════════════
+# pip install no puede resolver dlib automáticamente en Windows
+# (requiere compilar C++). Usar wheel precompilado para Python 3.11:
+#
+#   pip install cmake
+#   pip install https://github.com/z-mahmud22/Dlib_Windows_Python3.x/raw/main/dlib-19.24.1-cp311-cp311-win_amd64.whl
+#   pip install face_recognition==1.3.0
+#
+# Verificar instalación:
+#   python -c "import face_recognition; print('OK')"

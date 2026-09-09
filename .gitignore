@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Entornos virtuales
+venv/
+.venv/
+virtualenv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Variables de entorno
+.env
+.env.local
+.env.*.local
+
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de logs
+logs/
+*.log
+
+
+node_modules/
+package-lock.json

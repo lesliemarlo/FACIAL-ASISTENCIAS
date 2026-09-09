@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Marcar Asistencia</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<header class="cabecera">
+  <a href="/" class="cabecera__logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+    FacialApp
+  </a>
+  <nav class="cabecera__nav">
+    <a href="/"           class="nav-link">📋 Registro</a>
+    <a href="/asistencia" class="nav-link nav-link--activo" aria-current="page">✅ Asistencia</a>
+  </nav>
+</header>
+
+<div class="contenido">
+  <!--
+    Grid de 2 columnas en tablet horizontal.
+    En móvil: columna única (cámara + controles arriba, resultado abajo).
+  -->
+  <div class="asist-wrap">
+
+    <!-- ── Columna izquierda: cámara ── -->
+    <div class="asist-col-cam">
+
+      <div class="cam-selector">
+        <label class="lbl" for="sel-cam-a">Cámara</label>
+        <select id="sel-cam-a" class="select select--sm">
+          <option value="user">📷 Frontal</option>
+          <option value="environment">📸 Trasera</option>
+        </select>
+        <button type="button" id="btn-act" class="btn btn--gris">Activar cámara</button>
+      </div>
+
+      <div class="cam-wrap cam-wrap--fill" id="cam-a">
+        <video id="vid-a" class="cam-video" autoplay playsinline muted
+               aria-label="Cámara para reconocimiento"></video>
+        <div class="cam-overlay" aria-hidden="true">
+          <div class="cam-overlay__marco" id="cam-marco-a"></div>
+        </div>
+        <div class="cam-estado" id="cam-estado-a" hidden>
+          <span id="cam-estado-txt-a"></span>
+        </div>
+        <div class="cam-placeholder" id="ph-a">
+          <span class="cam-placeholder__ico">🔍</span>
+          <span>Activa la cámara — la foto se toma sola al ver tu rostro</span>
+        </div>
+      </div>
+
+      <canvas id="cnv-a" hidden></canvas>
+
+      <div class="spinner-wrap" id="spin-a" hidden>
+        <div class="spinner"></div>
+        <p>Verificando identidad…</p>
+      </div>
+
+    </div><!-- /col cámara -->
+
+    <div class="asist-col-res">
+
+      <!--
+        Panel de resultado — oculto hasta la primera captura.
+        aria-live para lectores de pantalla.
+      -->
+      <div class="resultado-panel" id="panel-res"
+           role="region" aria-live="polite" hidden>
+
+        <!-- RECONOCIDO -->
+        <div id="est-ok" hidden>
+          <div class="res-ico">✅</div>
+          <p class="res-nombre res-nombre--ok" id="res-nombre"></p>
+          <p class="res-sub">Hora: <strong id="res-hora"></strong></p>
+          <p class="res-sub">Confianza: <strong id="res-conf"></strong>%</p>
+          <p class="res-sub">Fecha: <strong id="res-fecha"></strong></p>
+          <p class="res-msg"  id="res-msg-ok"></p>
+        </div>
+
+        <!-- NO RECONOCIDO -->
+        <div id="est-fail" hidden>
+          <div class="res-ico">❌</div>
+          <p class="res-nombre res-nombre--fail">Persona no reconocida</p>
+          <p class="res-desc">No fue posible validar la identidad.<br>
+             Mira directo a la cámara con buena iluminación.</p>
+          <p class="res-msg" style="color:var(--c-err);font-weight:700">
+            Asistencia no registrada.
+          </p>
+        </div>
+
+        <!-- ERROR -->
+        <div id="est-err" hidden>
+          <div class="res-ico">⚠️</div>
+          <p class="res-nombre res-nombre--fail">Error del sistema</p>
+          <p class="res-desc" id="res-err-msg"></p>
+        </div>
+
+        <button type="button" id="btn-reint" class="btn btn--primario btn--ancho">
+          ↩ Intentar de nuevo
+        </button>
+
+      </div><!-- /panel-res -->
+
+      <!-- Panel de instrucciones (se oculta al primer resultado) -->
+      <div class="instr-panel" id="panel-instr">
+        <span class="instr-panel__ico">👤</span>
+        <p class="instr-panel__titulo">Cómo marcar asistencia</p>
+        <ol>
+          <li>Activa la cámara.</li>
+          <li>Centra tu rostro en el marco oval.</li>
+          <li>La foto se tomará <strong>automáticamente</strong> al detectar tu rostro.</li>
+          <li>Espera el resultado (1–3 segundos).</li>
+        </ol>
+      </div>
+
+    </div><!-- /col resultado -->
+
+    <!-- Historial — fila completa en la parte inferior -->
+    <div class="historial-wrap" id="historial" hidden>
+      <p class="historial-titulo">📋 Registros de esta sesión</p>
+      <ul class="historial-lista" id="lista-hist" role="list"></ul>
+    </div>
+
+  </div><!-- /asist-wrap -->
+</div><!-- /contenido -->
+
+<script src="{{ url_for('static', filename='js/asistencia.js') }}"></script>
+</body>
+</html>
